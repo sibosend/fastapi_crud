@@ -17,6 +17,7 @@ from zipfile import ZipFile
 router = APIRouter()
 
 limit_upload_type = ["image/jpeg", "image/png"]
+save_dir = f"/root/autodl-tmp/downloads/"
 
 
 def get_all_file_paths(directory):
@@ -62,7 +63,7 @@ def upload_image(
     image_prompt: str = Form(),
     db: Session = Depends(get_db)
 ):
-    global limit_upload_type
+    global limit_upload_type, save_dir
     print(image.filename)
     print(image_prompt)
 
@@ -75,7 +76,6 @@ def upload_image(
     if not image_prompt or len(image_prompt) > 50 or not tmp_prompt_format:
         return {"code": 9001, "message": "image prompt不合法。仅限英文、数字、空格，50个字符以内"}
 
-    save_dir = f"/Users/caritasem/Downloads/tmp"
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
 
