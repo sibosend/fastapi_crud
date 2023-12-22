@@ -1,6 +1,7 @@
 from . import schemas, models
 from sqlalchemy.orm import Session
 from fastapi import Depends, HTTPException, status, APIRouter, Response, File, UploadFile, Form
+from fastapi.responses import FileResponse
 from .database import get_db
 from tempfile import NamedTemporaryFile
 import os
@@ -11,11 +12,27 @@ import uuid
 import re
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
-
+from zipfile import ZipFile
 
 router = APIRouter()
 
 limit_upload_type = ["image/jpeg", "image/png"]
+
+
+def get_all_file_paths(directory):
+
+    # initializing empty file paths list
+    file_paths = []
+
+    # crawling through directory and subdirectories
+    for root, directories, files in os.walk(directory):
+        for filename in files:
+            # join the two strings in order to form the full filepath.
+            filepath = os.path.join(root, filename)
+            file_paths.append(filepath)
+
+    # returning all file paths
+    return file_paths
 
 
 @router.get('/')
@@ -24,6 +41,19 @@ def get_jobs(db: Session = Depends(get_db), limit: int = 10, page: int = 1, sear
 
     notes = db.query(models.Jobs).filter().limit(limit).offset(skip).all()
     return {'status': 'success', 'results': len(notes), 'notes': notes}
+
+
+@router.get('/{jobId}')
+def get_jobs(jobId: str, db: Session = Depends(get_db)):
+    job_query = db.query(models.Jobs).filter(models.Jobs.id ==
+                                             jobId)
+    db_job = job_query.first()
+
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No note with this id: {jobId} found')
+
+    return {'status': 'success', 'job': db_job}
 
 
 @router.post("/upload/", summary="上传图片")
@@ -79,47 +109,76 @@ def upload_image(
     return {"code": 200, "status": "success", "tmp_file_name": tmp_file_name}
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
-def create_note(payload: schemas.NoteBaseSchema, db: Session = Depends(get_db)):
-    new_note = models.Note(**payload.dict())
-    db.add(new_note)
-    db.commit()
-    db.refresh(new_note)
-    return {"status": "success", "note": new_note}
+@router.get("/down/{jobId}", summary="download")
+def download_3ds():
+    directory = f"/Users/caritasem/Downloads/tmp"
+
+    # calling function to get all file paths in the directory
+    file_paths = get_all_file_paths(directory)
+
+    # # printing the list of all files to be zipped
+    # print('Following files will be zipped:')
+    # for file_name in file_paths:
+    #     print(file_name)
+
+    zipname = "my_python_files.zip"
+    # writing files to a zipfile
+    with ZipFile(f'{directory}/{zipname}', 'w') as zip:
+        # writing each file one by one
+        for file in file_paths:
+            fary = file.split("/")
+            zip.write(file, arcname=fary[len(fary)-1])
+
+    return FileResponse(path=f'{directory}/{zipname}', filename=f"{zipname}", media_type="multipart/form-data")
 
 
-@router.patch('/{noteId}')
-def update_note(noteId: str, payload: schemas.NoteBaseSchema, db: Session = Depends(get_db)):
-    note_query = db.query(models.Note).filter(models.Note.id == noteId)
-    db_note = note_query.first()
-
-    if not db_note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'No note with this id: {noteId} found')
-    update_data = payload.dict(exclude_unset=True)
-    note_query.filter(models.Note.id == noteId).update(update_data,
-                                                       synchronize_session=False)
-    db.commit()
-    db.refresh(db_note)
-    return {"status": "success", "note": db_note}
-
-
-@router.get('/{noteId}')
-def get_post(noteId: str, db: Session = Depends(get_db)):
-    note = db.query(models.Note).filter(models.Note.id == noteId).first()
-    if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"No note with this id: {id} found")
-    return {"status": "success", "note": note}
+"""
+#
+# 
+# 
+#
+"""
+# @router.post('/', status_code=status.HTTP_201_CREATED)
+# def create_note(payload: schemas.NoteBaseSchema, db: Session = Depends(get_db)):
+#     new_note = models.Note(**payload.dict())
+#     db.add(new_note)
+#     db.commit()
+#     db.refresh(new_note)
+#     return {"status": "success", "note": new_note}
 
 
-@router.delete('/{noteId}')
-def delete_post(noteId: str, db: Session = Depends(get_db)):
-    note_query = db.query(models.Note).filter(models.Note.id == noteId)
-    note = note_query.first()
-    if not note:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'No note with this id: {id} found')
-    note_query.delete(synchronize_session=False)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+# @router.patch('/{noteId}')
+# def update_note(noteId: str, payload: schemas.NoteBaseSchema, db: Session = Depends(get_db)):
+#     note_query = db.query(models.Note).filter(models.Note.id == noteId)
+#     db_note = note_query.first()
+
+#     if not db_note:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f'No note with this id: {noteId} found')
+#     update_data = payload.dict(exclude_unset=True)
+#     note_query.filter(models.Note.id == noteId).update(update_data,
+#                                                        synchronize_session=False)
+#     db.commit()
+#     db.refresh(db_note)
+#     return {"status": "success", "note": db_note}
+
+
+# @router.get('/{noteId}')
+# def get_post(noteId: str, db: Session = Depends(get_db)):
+#     note = db.query(models.Note).filter(models.Note.id == noteId).first()
+#     if not note:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"No note with this id: {id} found")
+#     return {"status": "success", "note": note}
+
+
+# @router.delete('/{noteId}')
+# def delete_post(noteId: str, db: Session = Depends(get_db)):
+#     note_query = db.query(models.Note).filter(models.Note.id == noteId)
+#     note = note_query.first()
+#     if not note:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f'No note with this id: {id} found')
+#     note_query.delete(synchronize_session=False)
+#     db.commit()
+#     return Response(status_code=status.HTTP_204_NO_CONTENT)
