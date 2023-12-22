@@ -110,8 +110,20 @@ def upload_image(
 
 
 @router.get("/down/{jobId}", summary="download")
-def download_3ds():
-    directory = f"/Users/caritasem/Downloads/tmp"
+def download_3ds(jobId: str, db: Session = Depends(get_db)):
+
+    job_query = db.query(models.Jobs).filter(models.Jobs.id ==
+                                             jobId)
+    db_job = job_query.first()
+
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No note with this id: {jobId} found')
+
+    directory = db_job.d3_path
+
+    if not directory:
+        return {"code": 9003, "message": "3d objects not ready"}
 
     # calling function to get all file paths in the directory
     file_paths = get_all_file_paths(directory)
@@ -121,7 +133,7 @@ def download_3ds():
     # for file_name in file_paths:
     #     print(file_name)
 
-    zipname = "my_python_files.zip"
+    zipname = f'{jobId}.zip'
     # writing files to a zipfile
     with ZipFile(f'{directory}/{zipname}', 'w') as zip:
         # writing each file one by one
@@ -130,6 +142,18 @@ def download_3ds():
             zip.write(file, arcname=fary[len(fary)-1])
 
     return FileResponse(path=f'{directory}/{zipname}', filename=f"{zipname}", media_type="multipart/form-data")
+
+
+@router.delete('/{jobId}')
+def delete_post(jobId: str, db: Session = Depends(get_db)):
+    job_query = db.query(models.Jobs).filter(models.Jobs.id == jobId)
+    job = job_query.first()
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No job with this id: {id} found')
+    job_query.delete(synchronize_session=False)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 """

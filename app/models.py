@@ -22,12 +22,12 @@ class Note(Base):
 
 class Jobs(Base):
     __tablename__ = 'jobs'
-    id = Column(String, primary_key=True, nullable=False)
+    id = Column(String, primary_key=True, nullable=False, index=True)
     img_name = Column(String, nullable=False)
     img_path = Column(String, nullable=False)
     img_rgb = Column(String, nullable=True)
     img_prompt = Column(String, nullable=False)
-    step = Column(Integer, nullable=False, default=0)
+    step = Column(Integer, nullable=False, default=0, index=True)
     d3_path = Column(String, nullable=True)
     createdAt = Column(TIMESTAMP(timezone=True),
                        nullable=False, server_default=func.now())
