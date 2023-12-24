@@ -18,6 +18,7 @@ router = APIRouter()
 
 limit_upload_type = ["image/jpeg", "image/png"]
 save_dir = f"/root/autodl-tmp/downloads/"
+save_dir = "/Users/caritasem/Downloads/tmp"
 
 
 def get_all_file_paths(directory):
@@ -106,7 +107,7 @@ def upload_image(
     db.commit()
     db.refresh(new_job)
 
-    return {"code": 200, "status": "success", "tmp_file_name": tmp_file_name}
+    return {"code": 200, "status": "success", "tmp_file_name": tmp_file_name, "job_id": str(uid1)}
 
 
 @router.get("/down/{jobId}", summary="download")
