@@ -18,7 +18,7 @@ router = APIRouter()
 
 limit_upload_type = ["image/jpeg", "image/png"]
 save_dir = f"/root/autodl-tmp/downloads/"
-save_dir = "/Users/caritasem/Downloads/tmp"
+# save_dir = "/Users/caritasem/Downloads/tmp"
 
 
 def get_all_file_paths(directory):
