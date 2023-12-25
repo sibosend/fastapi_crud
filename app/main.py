@@ -2,10 +2,11 @@ from app import models, note, jobs
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
+from fastapi_offline import FastAPIOffline
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPIOffline()
 
 origins = [
     "http://localhost:3000",
