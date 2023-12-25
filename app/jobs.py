@@ -62,7 +62,7 @@ def get_jobs(jobId: str, db: Session = Depends(get_db)):
 def upload_image(
     image: UploadFile = File(...),
     image_prompt: str = Form(),
-    max_step: int = Form(),
+    max_steps: int = Form(),
     db: Session = Depends(get_db)
 ):
     global limit_upload_type, save_dir
@@ -78,9 +78,9 @@ def upload_image(
     if not image_prompt or len(image_prompt) > 50 or not tmp_prompt_format:
         return {"code": 9001, "message": "image prompt不合法。仅限英文、数字、空格，50个字符以内"}
 
-    max_step = int(max_step)
-    if not max_step or max_step > 10000 or max_step < 1:
-        return {"code": 9002, "message": "max_step限1~10000"}
+    max_steps = int(max_steps)
+    if not max_steps or max_steps > 10000 or max_steps < 1:
+        return {"code": 9002, "message": "max_steps 限1~10000"}
 
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
@@ -107,7 +107,7 @@ def upload_image(
     new_job.img_path = str(destination)
     new_job.img_prompt = image_prompt
     new_job.step = 0
-    new_job.max_step = max_step
+    new_job.max_steps = max_steps
     new_job.createdAt = datetime.now()
     db.add(new_job)
     db.commit()
