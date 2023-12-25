@@ -7,7 +7,7 @@ In this article, I'll provide you with a simple and straightforward guide on how
 ## how to start
 - pip install -r requirements.txt
 - uvicorn app.main:app --reload
-- uvicorn app.main:app --host localhost --port 8000 --reload
+- uvicorn app.main:app --host localhost --port 6006 --reload
 
 
 ![Build a CRUD App with FastAPI and SQLAlchemy](https://codevoweb.com/wp-content/uploads/2022/11/Build-a-CRUD-App-with-FastAPI-and-SQLAlchemy.png)

@@ -58,10 +58,11 @@ def get_jobs(jobId: str, db: Session = Depends(get_db)):
     return {'status': 'success', 'job': db_job}
 
 
-@router.post("/upload/", summary="上传图片")
+@router.post("/upload/", summary="上传待处理图片")
 def upload_image(
     image: UploadFile = File(...),
     image_prompt: str = Form(),
+    max_step: int = Form(),
     db: Session = Depends(get_db)
 ):
     global limit_upload_type, save_dir
@@ -76,6 +77,10 @@ def upload_image(
     print(tmp_prompt_format)
     if not image_prompt or len(image_prompt) > 50 or not tmp_prompt_format:
         return {"code": 9001, "message": "image prompt不合法。仅限英文、数字、空格，50个字符以内"}
+
+    max_step = int(max_step)
+    if not max_step or max_step > 10000 or max_step < 1:
+        return {"code": 9002, "message": "max_step限1~10000"}
 
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
@@ -102,6 +107,7 @@ def upload_image(
     new_job.img_path = str(destination)
     new_job.img_prompt = image_prompt
     new_job.step = 0
+    new_job.max_step = max_step
     new_job.createdAt = datetime.now()
     db.add(new_job)
     db.commit()
@@ -143,6 +149,66 @@ def download_3ds(jobId: str, db: Session = Depends(get_db)):
             zip.write(file, arcname=fary[len(fary)-1])
 
     return FileResponse(path=f'{directory}/{zipname}', filename=f"{zipname}", media_type="multipart/form-data")
+
+
+@router.get("/down/{jobId}/mtl", summary="download obj's mtl file")
+def download_3ds(jobId: str, db: Session = Depends(get_db)):
+
+    job_query = db.query(models.Jobs).filter(models.Jobs.id ==
+                                             jobId)
+    db_job = job_query.first()
+
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No job with this id: {jobId} found')
+
+    directory = db_job.d3_path
+
+    if not directory:
+        return {"code": 9003, "message": "3d objects not ready"}
+
+    downfile = "model.mtl"
+    return FileResponse(path=f'{directory}/{downfile}', filename=f"{downfile}", media_type="multipart/form-data")
+
+
+@router.get("/down/{jobId}/obj", summary="download obj's obj file")
+def download_3ds(jobId: str, db: Session = Depends(get_db)):
+
+    job_query = db.query(models.Jobs).filter(models.Jobs.id ==
+                                             jobId)
+    db_job = job_query.first()
+
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No job with this id: {jobId} found')
+
+    directory = db_job.d3_path
+
+    if not directory:
+        return {"code": 9003, "message": "3d objects not ready"}
+
+    downfile = "model.obj"
+    return FileResponse(path=f'{directory}/{downfile}', filename=f"{downfile}", media_type="multipart/form-data")
+
+
+@router.get("/down/{jobId}/texture", summary="download obj's texture file")
+def download_3ds(jobId: str, db: Session = Depends(get_db)):
+
+    job_query = db.query(models.Jobs).filter(models.Jobs.id ==
+                                             jobId)
+    db_job = job_query.first()
+
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f'No job with this id: {jobId} found')
+
+    directory = db_job.d3_path
+
+    if not directory:
+        return {"code": 9003, "message": "3d objects not ready"}
+
+    downfile = "texture_kd.jpg"
+    return FileResponse(path=f'{directory}/{downfile}', filename=f"{downfile}", media_type="multipart/form-data")
 
 
 @router.delete('/{jobId}')

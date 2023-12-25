@@ -27,6 +27,7 @@ class Jobs(Base):
     img_path = Column(String, nullable=False)
     img_rgb = Column(String, nullable=True)
     img_prompt = Column(String, nullable=False)
+    max_steps = Column(Integer, nullable=False, default=1000)
     step = Column(Integer, nullable=False, default=0, index=True)
     d3_path = Column(String, nullable=True)
     createdAt = Column(TIMESTAMP(timezone=True),
