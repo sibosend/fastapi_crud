@@ -6,9 +6,21 @@
 </head>
 <body>
 
-<h1>This is a Heading</h1>
+<h1>This is a Heading 001</h1>
 <p>This is a paragraph.</p>
 <p class="fromcss">this style from static css file.</p>
 
+<script type="text/javascript">
+
+    const Http = new XMLHttpRequest();
+    const url='http://region-45.autodl.pro:33538/api/jobs/?limit=10&page=1';
+    Http.open("GET", url);
+    Http.send();
+
+    Http.onreadystatechange = (e) => {
+    console.log(Http.responseText)
+    }
+
+</script>
 </body>
 </html>

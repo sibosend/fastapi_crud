@@ -12,7 +12,9 @@ app = FastAPIOffline()
 app.mount("/front", StaticFiles(directory="front"), name="front")
 
 origins = [
-    "http://localhost:3000",
+    "http://127.0.0.1:6006",
+    "http://localhost:6006",
+    "http://39.105.160.133",
 ]
 
 app.add_middleware(
