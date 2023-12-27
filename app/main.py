@@ -3,10 +3,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine
 from fastapi_offline import FastAPIOffline
+from fastapi.staticfiles import StaticFiles
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPIOffline()
+
+app.mount("/front", StaticFiles(directory="front"), name="front")
 
 origins = [
     "http://localhost:3000",
