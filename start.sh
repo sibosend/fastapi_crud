@@ -1,5 +1,5 @@
 #!/bin/bash
 
-source activate lili
+source activate magiweb
 
 uvicorn app.main:app --host localhost --port 6006 --reload
