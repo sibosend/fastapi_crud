@@ -41,7 +41,8 @@ def get_all_file_paths(directory):
 def get_jobs(db: Session = Depends(get_db), limit: int = 10, page: int = 1, search: str = ''):
     skip = (page - 1) * limit
 
-    notes = db.query(models.Jobs).filter().limit(limit).offset(skip).all()
+    notes = db.query(models.Jobs).order_by(
+        models.Jobs.createdAt.desc()).limit(limit).offset(skip).all()
     return {'status': 'success', 'results': len(notes), 'notes': notes}
 
 
