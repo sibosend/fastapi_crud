@@ -1,0 +1,11 @@
+[Unit]
+Description=My fastapi crdu APP
+After=syslog.target
+ 
+[Service]
+ExecStart=/bin/bash /root/autodl-tmp/lili/fastapi_crud/start.sh
+SuccessExitStatus=143
+RemainAfterExit=yes
+ 
+[Install]
+WantedBy=multi-user.target
